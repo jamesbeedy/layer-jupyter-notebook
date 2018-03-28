@@ -1,0 +1,15 @@
+name: jupyter-notebook
+summary: Jupyter Notebook
+maintainer: James Beedy <jamesbeedy@gmail.com>
+description: |
+  This charm deploys jupyter notebook with findspark.
+tags:
+  - jupyter
+  - spark
+  - data-processing
+series:
+- xenial
+subordinate: false
+provides:
+  http:
+    interface: "http"

@@ -1,0 +1,7 @@
+includes:
+  - 'layer:basic'
+  - 'interface:http'
+options:
+  basic:
+    use_venv: false
+repo: "https://github.com/omnivector-solutions/layer-jupyter-notebook"

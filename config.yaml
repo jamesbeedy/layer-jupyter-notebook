@@ -1,0 +1,17 @@
+options:
+  jupyter-web-password:
+    description: |
+      Jupyter web password - if not set, this charm will generate a password for you and expose it via web ui.
+    type: string
+    default: ""
+  jupyter-web-port:
+    description: |
+      TCP web port for Jupyter notebook.
+    type: int
+    default: 9999
+  pip3-dependencies:
+    description: |
+      Extra pip deps to install to the Jupyter python env.
+    type: string
+    default: ""
+ 
