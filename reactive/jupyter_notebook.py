@@ -12,6 +12,7 @@ JUPYTER_DIR = '/opt/jupyter'
 
 @when_not('jupyter-notebook.config.dir.available')
 def create_jupyter_config_dir():
+    os.makedirs(JUPYTER_DIR, exist_ok=True)
     chownr(JUPYTER_DIR, 'ubuntu', 'ubuntu', chowntopdir=True)
     set_flag('jupyter-notebook.config.dir.available')
 
