@@ -1,4 +1,9 @@
 options:
+  conda-install-url:
+    type: string
+    default: "https://repo.continuum.io/archive/Anaconda3-5.1.0-Linux-x86_64.sh"
+    description: |
+      URL to install conda from
   jupyter-web-password:
     description: |
       Jupyter web password - if not set, this charm will generate a password for you and expose it via web ui.

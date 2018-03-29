@@ -19,25 +19,24 @@ def create_jupyter_config_dir():
 
 @when_not('jupyter-notebook.installed')
 def install_jupyter_notebook():
+    conf = hookenv.config()
     hookenv.log("Install Jupyter-notebook")
-    pip_install('pip', upgrade=True)
-    pip_install('jupyter')
-    pip_install('toree')
+    # Install conda
+    subprocess.call(['wget', conf.get('conda-install-url'), '-O', '/srv/install_conda.sh'])
+    subprocess.call(['chmod', '+x', '/srv/install_conda.sh'])
+    subprocess.call(['/srv/install_conda.sh', '-b', '-f', '-p',
+                     '/home/ubuntu/anaconda'])
+    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'update', '-y',
+                     '-n', 'base', 'conda'])
+    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'create', '-y',
+                     '-n', 'jupyter', 'python=3.5', 'jupyter', 'nb_conda'])
+    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install', '-y', 'jupyter'])
+    chownr('/home/ubuntu/anaconda', 'ubuntu', 'ubuntu', chowntopdir=True)
+
     set_flag('jupyter-notebook.installed')
 
 
-@when_not('jupyter-notebook.extra.deps.installed')
-def install_extra_dependencies():
-    deps = hookenv.config()['pip3-dependencies'].split()
-    if deps:
-        pip_install(" ".join(deps))
-        if host.service_running('jupyter-notebook'):
-            restart_notebook()
-    set_flag('jupyter-notebook.extra.deps.installed')
-
-
 @when('jupyter-notebook.installed',
-      'jupyter-notebook.extra.deps.installed',
       'jupyter-notebook.config.dir.available')
 @when_not('jupyter-notebook.init.config.available')
 def init_configure_jupyter_notebook():
@@ -57,7 +56,7 @@ def init_configure_jupyter_notebook():
 
     templating.render(
         source='jupyter_notebook_config.py.j2',
-        target=os.path.join(JUPYTER_DIR, '/jupyter_notebook_config.py'),
+        target=os.path.join(JUPYTER_DIR, 'jupyter_notebook_config.py'),
         context=ctxt,
         owner='ubuntu',
         group='ubuntu',
