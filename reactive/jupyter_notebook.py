@@ -10,6 +10,12 @@ from charms.reactive import when, when_not, set_flag, clear_flag
 JUPYTER_DIR = '/opt/jupyter'
 
 
+@when_not('notebook.installed')
+def install_notebook_dep():
+    subprocess.call(['pip3', 'install', 'notebook'])
+    set_flag('notebook.installed')
+
+
 @when_not('jupyter-notebook.config.dir.available')
 def create_jupyter_config_dir():
     os.makedirs(JUPYTER_DIR, exist_ok=True)
@@ -21,7 +27,7 @@ def create_jupyter_config_dir():
 def install_jupyter_notebook():
     conf = hookenv.config()
     hookenv.log("Install Jupyter-notebook")
-    # Install conda
+
     subprocess.call(['wget', conf.get('conda-install-url'), '-O', '/srv/install_conda.sh'])
     subprocess.call(['chmod', '+x', '/srv/install_conda.sh'])
     subprocess.call(['/srv/install_conda.sh', '-b', '-f', '-p',
@@ -31,12 +37,14 @@ def install_jupyter_notebook():
     subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'create', '-y',
                      '-n', 'jupyter', 'python=3.5', 'jupyter', 'nb_conda'])
     subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install', '-y', 'jupyter'])
+    subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip', 'install', 'findspark'])
     chownr('/home/ubuntu/anaconda', 'ubuntu', 'ubuntu', chowntopdir=True)
 
     set_flag('jupyter-notebook.installed')
 
 
-@when('jupyter-notebook.installed',
+@when('notebook.installed',
+      'jupyter-notebook.installed',
       'jupyter-notebook.config.dir.available')
 @when_not('jupyter-notebook.init.config.available')
 def init_configure_jupyter_notebook():
@@ -81,12 +89,6 @@ def jupyter_init_available():
         set_flag('jupyter-notebook.init.available')
     else:
         hookenv.status_set('blocked', "Jupyter could not start - Please DEBUG")
-
-
-@when('config.changed.pip3-dependencies',
-      'jupyter-notebook.init.available')
-def pip3_deps_changed():
-    clear_flag('jupyter-notebook.extra.deps.installed')
 
 
 def restart_notebook():

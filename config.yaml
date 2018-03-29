@@ -14,9 +14,3 @@ options:
       TCP web port for Jupyter notebook.
     type: int
     default: 9999
-  pip3-dependencies:
-    description: |
-      Extra pip deps to install to the Jupyter python env.
-    type: string
-    default: ""
- 
