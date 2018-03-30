@@ -164,13 +164,19 @@ def jupyter_status():
         )
 
 
-def render_api_systemd_template(context=None):
-    if not context:
-        context = {}
+def render_jupyter_systemd_template(ctxt=None):
+    """Render Jupyter Systemd template
+    """
+
+    if not ctxt:
+        ctxt = {}
+
+    ctxt['jupyter_bin'] = str(CONDA_HOME / 'envs' / 'juju' / 'bin' / 'jupyter')
+
     templating.render(
         source='jupyter-notebook.service.j2',
         target='/etc/systemd/system/jupyter-notebook.service',
-        context=context,
+        context=ctxt,
     )
     subprocess.check_call(['systemctl', 'daemon-reload'])
 

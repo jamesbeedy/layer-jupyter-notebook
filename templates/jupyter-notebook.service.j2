@@ -8,7 +8,7 @@ WorkingDirectory=/home/ubuntu
 EnvironmentFile=/etc/environment
 Environment=SPARK_HOME=/usr/lib/spark
 Environment=SPARK_CONF_DIR=/etc/spark/conf
-ExecStart=/home/ubuntu/anaconda/envs/jupyter/bin/jupyter notebook --config /opt/jupyter/jupyter_notebook_config.py
+ExecStart={{jupyter_bin}} notebook --config /opt/jupyter/jupyter_notebook_config.py
 
 [Install]
 WantedBy=multi-user.target
