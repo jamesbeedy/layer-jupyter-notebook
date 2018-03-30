@@ -6,6 +6,13 @@ from charmhelpers.core.host import chownr
 from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
 from charms.reactive import endpoint_from_flag, when, when_not, set_flag
 
+from charms.layer.conda_api import (
+    CONDA_HOME,
+    create_conda_venv,
+    init_install_conda,
+    install_conda_packages,
+    install_conda_pip_packages,
+)
 
 JUPYTER_DIR = '/opt/jupyter'
 
@@ -31,45 +38,31 @@ def install_jupyter_notebook():
     hookenv.log("Install Jupyter-notebook")
 
     # Download and install conda
-    conda_installer_path = aufh.download_and_validate(
+    init_install_conda(
         conf.get('conda-installer-url'),
         conf.get('conda-installer-sha256'),
         validate="sha256"
     )
-    if conda_installer_path:
-        subprocess.call(['bash', conda_installer_path, '-b', '-f', '-p',
-                         '/home/ubuntu/anaconda'])
-        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'update', '-y',
-                         '-n', 'base', 'conda'])
 
-        # Create virtualenv and install jupyter
-        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'create', '-y',
-                         '-n', 'jupyter', 'python=3.5', 'jupyter', 'nb_conda'])
-        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install', '-y',
-                         'jupyter'])
+    # Create virtualenv and install jupyter
+    create_conda_venv(python_version="3.5", packages=['jupyter', 'nb_conda'])
 
-        # Install any extra conda packages
-        if conf.get('conda-extra-packages'):
-            subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install',
-                             '-y', conf.get('conda-extra-packages')])
+    # Install any extra conda packages
+    if conf.get('conda-extra-packages'):
+        install_conda_packages(conf.get('conda-extra-packages'))
 
-        # Pip install findspark
-        subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip',
-                         'install', 'findspark'])
+    # Pip install findspark
+    install_conda_pip_packages(['findspark'])
 
-        # Install any extra conda pip packages
-        if conf.get('conda-extra-pip-packages'):
-            subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip',
-                             'install', conf.get('conda-extra-pip-packages')])
-        # Chown the perms to ubuntu
-        chownr('/home/ubuntu/anaconda', 'ubuntu', 'ubuntu', chowntopdir=True)
+    # Install any extra conda pip packages
+    if conf.get('conda-extra-pip-packages'):
+        install_conda_pip_packages(conf.get('conda-extra-pip-packages'))
 
-        # Set installed flag
-        set_flag('jupyter-notebook.installed')
-    else:
-        hookenv.status_set('blocked',
-                           "Conda could not verify installer, please DEBUG")
-        return
+    # Chown the perms to ubuntu
+    chownr(str(CONDA_HOME), 'ubuntu', 'ubuntu', chowntopdir=True)
+
+    # Set installed flag
+    set_flag('jupyter-notebook.installed')
 
 
 @when('notebook.installed',

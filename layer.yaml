@@ -1,5 +1,6 @@
 includes:
   - 'layer:basic'
+  - 'layer:conda-api'
   - 'interface:http'
   - 'interface:conda'
 options:
