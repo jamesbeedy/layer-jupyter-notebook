@@ -47,14 +47,15 @@ def install_jupyter_notebook():
 
     # Install any extra conda packages
     if conf.get('conda-extra-packages'):
-        install_conda_packages(conf.get('conda-extra-packages'))
+        install_conda_packages(conf.get('conda-extra-packages').split())
 
     # Pip install findspark
     install_conda_pip_packages(['findspark'])
 
     # Install any extra conda pip packages
     if conf.get('conda-extra-pip-packages'):
-        install_conda_pip_packages(conf.get('conda-extra-pip-packages'))
+        install_conda_pip_packages(
+            conf.get('conda-extra-pip-packages').split())
 
     # Chown the perms to ubuntu
     chownr(str(CONDA_HOME), 'ubuntu', 'ubuntu', chowntopdir=True)
@@ -95,7 +96,7 @@ def init_configure_jupyter_notebook():
 @when('jupyter-notebook.init.config.available')
 @when_not('jupyter-notebook.systemd.available')
 def render_systemd():
-    render_api_systemd_template()
+    render_jupyter_systemd_template()
     set_flag('jupyter-notebook.systemd.available')
 
 
