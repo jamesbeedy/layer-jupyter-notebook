@@ -3,7 +3,6 @@ import subprocess
 
 from charmhelpers.core import hookenv, host, templating, unitdata
 from charmhelpers.core.host import chownr
-from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
 from charms.reactive import endpoint_from_flag, when, when_not, set_flag
 
 from charms.layer.conda_api import (
@@ -32,10 +31,9 @@ def create_jupyter_config_dir():
 
 @when_not('jupyter-notebook.installed')
 def install_jupyter_notebook():
-    conf = hookenv.config()
-    aufh = ArchiveUrlFetchHandler()
-
     hookenv.log("Install Jupyter-notebook")
+
+    conf = hookenv.config()
 
     # Download and install conda
     init_install_conda(
