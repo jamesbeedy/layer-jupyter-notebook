@@ -13,3 +13,5 @@ subordinate: false
 provides:
   http:
     interface: "http"
+  conda:
+    interface: "conda"

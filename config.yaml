@@ -1,9 +1,24 @@
 options:
-  conda-install-url:
+  conda-extra-packages:
+    type: string
+    default: ""
+    description: |
+      Space separated list of extra packages to `conda install`
+  conda-extra-pip-packages:
+    type: string
+    default: ""
+    description: |
+      Space separated list of extra packages to `pip install` into the conda env
+  conda-installer-url:
     type: string
     default: "https://repo.continuum.io/archive/Anaconda3-5.1.0-Linux-x86_64.sh"
     description: |
       URL to install conda from
+  conda-installer-sha256:
+    type: string
+    default: "7e6785caad25e33930bc03fac4994a434a21bc8401817b7efa28f53619fa9c29"
+    description: |
+      SHA checksum for installer
   jupyter-web-password:
     description: |
       Jupyter web password - if not set, this charm will generate a password for you and expose it via web ui.

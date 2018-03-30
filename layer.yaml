@@ -1,6 +1,7 @@
 includes:
   - 'layer:basic'
   - 'interface:http'
+  - 'interface:conda'
 options:
   basic:
     use_venv: false

@@ -3,8 +3,8 @@ import subprocess
 
 from charmhelpers.core import hookenv, host, templating, unitdata
 from charmhelpers.core.host import chownr
-from charmhelpers.contrib.python.packages import pip_install
-from charms.reactive import when, when_not, set_flag, clear_flag
+from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
+from charms.reactive import endpoint_from_flag, when, when_not, set_flag
 
 
 JUPYTER_DIR = '/opt/jupyter'
@@ -26,21 +26,50 @@ def create_jupyter_config_dir():
 @when_not('jupyter-notebook.installed')
 def install_jupyter_notebook():
     conf = hookenv.config()
+    aufh = ArchiveUrlFetchHandler()
+
     hookenv.log("Install Jupyter-notebook")
 
-    subprocess.call(['wget', conf.get('conda-install-url'), '-O', '/srv/install_conda.sh'])
-    subprocess.call(['chmod', '+x', '/srv/install_conda.sh'])
-    subprocess.call(['/srv/install_conda.sh', '-b', '-f', '-p',
-                     '/home/ubuntu/anaconda'])
-    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'update', '-y',
-                     '-n', 'base', 'conda'])
-    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'create', '-y',
-                     '-n', 'jupyter', 'python=3.5', 'jupyter', 'nb_conda'])
-    subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install', '-y', 'jupyter'])
-    subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip', 'install', 'findspark'])
-    chownr('/home/ubuntu/anaconda', 'ubuntu', 'ubuntu', chowntopdir=True)
+    # Download and install conda
+    conda_installer_path = aufh.download_and_validate(
+        conf.get('conda-installer-url'),
+        conf.get('conda-installer-sha256'),
+        validate="sha256"
+    )
+    if conda_installer_path:
+        subprocess.call(['bash', conda_installer_path, '-b', '-f', '-p',
+                         '/home/ubuntu/anaconda'])
+        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'update', '-y',
+                         '-n', 'base', 'conda'])
 
-    set_flag('jupyter-notebook.installed')
+        # Create virtualenv and install jupyter
+        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'create', '-y',
+                         '-n', 'jupyter', 'python=3.5', 'jupyter', 'nb_conda'])
+        subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install', '-y',
+                         'jupyter'])
+
+        # Install any extra conda packages
+        if conf.get('conda-extra-packages'):
+            subprocess.call(['/home/ubuntu/anaconda/bin/conda', 'install',
+                             '-y', conf.get('conda-extra-packages')])
+
+        # Pip install findspark
+        subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip',
+                         'install', 'findspark'])
+
+        # Install any extra conda pip packages
+        if conf.get('conda-extra-pip-packages'):
+            subprocess.call(['/home/ubuntu/anaconda/envs/jupyter/bin/pip',
+                             'install', conf.get('conda-extra-pip-packages')])
+        # Chown the perms to ubuntu
+        chownr('/home/ubuntu/anaconda', 'ubuntu', 'ubuntu', chowntopdir=True)
+
+        # Set installed flag
+        set_flag('jupyter-notebook.installed')
+    else:
+        hookenv.status_set('blocked',
+                           "Conda could not verify installer, please DEBUG")
+        return
 
 
 @when('notebook.installed',
@@ -89,6 +118,36 @@ def jupyter_init_available():
         set_flag('jupyter-notebook.init.available')
     else:
         hookenv.status_set('blocked', "Jupyter could not start - Please DEBUG")
+
+
+@when('endpoint.conda.joined')
+@when_not('conda.relation.data.available')
+def set_conda_relation_data():
+    """Set conda endpoint relation data
+    """
+    conf = hookenv.config()
+    endpoint = endpoint_from_flag('endpoint.conda.joined')
+
+    ctxt = {'url': conf.get('conda-installer-url'),
+            'sha': conf.get('conda-installer-sha256')}
+
+    if conf.get('conda-extra-packages'):
+        ctxt['conda_extra_packages'] = conf.get('conda-extra-packages')
+
+    if conf.get('conda-extra-pip-packages'):
+        ctxt['conda_extra_pip_packages'] = \
+            conf.get('conda-extra-pip-packages')
+
+    endpoint.configure(**ctxt)
+    set_flag('conda.relation.data.available')
+
+
+@when('endpoint.http.joined',
+      'jupyter-notebook.init.available')
+def configure_http():
+    conf = hookenv.config()
+    endpoint = endpoint_from_flag('endpoint.http.joined')
+    endpoint.configure(port=conf.get('jupyter-web-port'))
 
 
 def restart_notebook():
