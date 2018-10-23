@@ -3,7 +3,7 @@ import subprocess
 
 from charmhelpers.core import hookenv, host, templating, unitdata
 from charmhelpers.core.host import chownr
-from charms.reactive import endpoint_from_flag, when, when_not, set_flag
+from charms.reactive import endpoint_from_flag, when, when_not, set_flag, clear_flag
 
 from charms.layer.conda_api import (
     CONDA_HOME,
@@ -64,6 +64,11 @@ def install_jupyter_notebook():
     set_flag('jupyter-notebook.installed')
 
 
+@when('config.changed')
+def config_changed():
+    clear_flag('jupyter-notebook.init.config.available')
+
+
 @when('notebook.installed',
       'jupyter-notebook.installed',
       'jupyter-notebook.config.dir.available')
@@ -81,6 +86,7 @@ def init_configure_jupyter_notebook():
     ctxt = {
         'port': conf.get('jupyter-web-port'),
         'password_hash': generate_hash(kv.get('password')),
+        'base_url': conf.get('jupyter-base-url'),
     }
 
     templating.render(
@@ -112,13 +118,13 @@ def jupyter_init_available():
         hookenv.status_set('blocked', "Jupyter could not start - Please DEBUG")
 
 
-@when('endpoint.conda.joined')
+@when('conda.available')
 @when_not('conda.relation.data.available')
 def set_conda_relation_data():
     """Set conda endpoint relation data
     """
     conf = hookenv.config()
-    endpoint = endpoint_from_flag('endpoint.conda.joined')
+    endpoint = endpoint_from_flag('conda.available')
 
     ctxt = {'url': conf.get('conda-installer-url'),
             'sha': conf.get('conda-installer-sha256')}
@@ -134,11 +140,11 @@ def set_conda_relation_data():
     set_flag('conda.relation.data.available')
 
 
-@when('endpoint.http.joined',
+@when('http.available',
       'jupyter-notebook.init.available')
 def configure_http():
     conf = hookenv.config()
-    endpoint = endpoint_from_flag('endpoint.http.joined')
+    endpoint = endpoint_from_flag('http.available')
     endpoint.configure(port=conf.get('jupyter-web-port'))
 
 

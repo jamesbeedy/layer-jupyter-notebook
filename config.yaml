@@ -19,6 +19,10 @@ options:
     default: "7e6785caad25e33930bc03fac4994a434a21bc8401817b7efa28f53619fa9c29"
     description: |
       SHA checksum for installer
+  jupyter-base-url:
+    description: |
+      Base URL of the notebook, if reverse-proxied.
+    type: string
   jupyter-web-password:
     description: |
       Jupyter web password - if not set, this charm will generate a password for you and expose it via web ui.

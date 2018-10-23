@@ -14,5 +14,11 @@ c.NotebookApp.password = "{{password_hash}}"
 # Don't try another port if this port is unavailable.
 c.NotebookApp.port_retries = 0
 
-#Answer yes to all prompts (such as "are you sure you want to shutdown the notebook")
+# Answer yes to all prompts (such as "are you sure you want to shutdown the notebook")
 c.NotebookApp.answer_yes = True
+
+{% if base_url %}
+# Configure base_url if we're reverse-proxied to behind a base path.
+c.NotebookApp.base_url = {{base_url}}
+
+{% endif %}
