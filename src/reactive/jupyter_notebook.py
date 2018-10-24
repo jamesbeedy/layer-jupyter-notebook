@@ -3,7 +3,13 @@ import subprocess
 
 from charmhelpers.core import hookenv, host, templating, unitdata
 from charmhelpers.core.host import chownr
-from charms.reactive import endpoint_from_flag, when, when_not, set_flag, clear_flag
+from charms.reactive import (
+    endpoint_from_flag,
+    when,
+    when_not,
+    set_flag,
+    clear_flag,
+)
 
 from charms.layer.conda_api import (
     CONDA_HOME,
