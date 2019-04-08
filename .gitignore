@@ -1,1 +1,5 @@
 .tox
+build/
+layers/
+interfaces/
+*.tgz
