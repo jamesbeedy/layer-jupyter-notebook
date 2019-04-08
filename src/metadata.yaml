@@ -8,7 +8,7 @@ tags:
   - spark
   - data-processing
 series:
-- xenial
+- bionic
 subordinate: false
 provides:
   http:

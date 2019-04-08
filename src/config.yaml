@@ -23,13 +23,9 @@ options:
     description: |
       Base URL of the notebook, if reverse-proxied.
     type: string
+    default: ""
   jupyter-web-password:
     description: |
       Jupyter web password - if not set, this charm will generate a password for you and expose it via web ui.
     type: string
     default: ""
-  jupyter-web-port:
-    description: |
-      TCP web port for Jupyter notebook.
-    type: int
-    default: 9999

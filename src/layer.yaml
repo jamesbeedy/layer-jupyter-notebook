@@ -1,9 +1,7 @@
 includes:
   - 'layer:basic'
   - 'layer:conda-api'
+  - 'layer:spark-base'
   - 'interface:http'
   - 'interface:conda'
-options:
-  basic:
-    use_venv: false
 repo: "https://github.com/omnivector-solutions/layer-jupyter-notebook"
