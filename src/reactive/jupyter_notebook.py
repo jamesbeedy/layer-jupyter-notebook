@@ -42,7 +42,7 @@ JUPYTER_NOTEBOOK_PORT = 8888
 def bind_address_available():
     """Get the correct ip address for jupyter to bind.
     """
-    ip = network_get('http')['ingress-addresses'][0]
+    ip = hookenv.network_get('http')['ingress-addresses'][0]
     KV.set('bind_address', ip)
     set_flag('jupyter.bind.address.available')
 
@@ -55,7 +55,7 @@ def create_jupyter_work_dir():
 
 
 @when('spark.base.init.complete')
-@when_not('jupyter-notebook.installed')
+@when_not('jupyter.installed')
 def install_jupyter_notebook():
     hookenv.log("Install Jupyter-notebook")
 
