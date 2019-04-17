@@ -11,11 +11,16 @@ options:
       Space separated list of extra packages to `pip install` into the conda env
   conda-installer-url:
     type: string
-    default: "https://repo.continuum.io/archive/Anaconda3-5.1.0-Linux-x86_64.sh"
+    default: "https://repo.continuum.io/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh"
     description: |
       URL to install conda from
-  conda-installer-sha256:
+  conda-installer-checksum:
     type: string
-    default: "7e6785caad25e33930bc03fac4994a434a21bc8401817b7efa28f53619fa9c29"
+    default: "866ae9dff53ad0874e1d1a60b1ad1ef8"
     description: |
       SHA checksum for installer
+  conda-validate-hash-type:
+    type: string
+    default: "md5"
+    description: |
+      Hash type to use for conda checksum

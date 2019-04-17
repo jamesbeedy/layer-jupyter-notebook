@@ -54,7 +54,7 @@ def create_jupyter_work_dir():
     set_flag('jupyter.work.dir.available')
 
 
-@when('spark.base.init.complete')
+@when('spark.base.available')
 @when_not('jupyter.installed')
 def install_jupyter_notebook():
     hookenv.log("Install Jupyter-notebook")
@@ -64,9 +64,9 @@ def install_jupyter_notebook():
     if not CONDA_HOME.exists():
         # Download and install conda
         init_install_conda(
-            conf.get('conda-installer-url'),
-            conf.get('conda-installer-sha256'),
-            validate="sha256"
+            url=conf.get('conda-installer-url'),
+            checksum=conf.get('conda-installer-checksum'),
+            hash_type=conf.get('conda-validate-hash-type')
         )
 
     # Remove venv to be sure we are getting a clean install
