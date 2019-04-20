@@ -19,8 +19,13 @@ options:
     default: "866ae9dff53ad0874e1d1a60b1ad1ef8"
     description: |
       SHA checksum for installer
-  conda-validate-hash-type:
+  conda-installer-hash-type:
     type: string
     default: "md5"
     description: |
       Hash type to use for conda checksum
+  python-version:
+    type: string
+    default: "3.6"
+    description: |
+      Python version to use in the conda env

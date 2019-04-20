@@ -66,7 +66,7 @@ def install_jupyter_notebook():
         init_install_conda(
             url=conf.get('conda-installer-url'),
             checksum=conf.get('conda-installer-checksum'),
-            hash_type=conf.get('conda-validate-hash-type')
+            hash_type=conf.get('conda-installer-hash-type')
         )
 
     # Remove venv to be sure we are getting a clean install

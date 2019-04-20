@@ -10,14 +10,14 @@ Type=simple
 
 User=ubuntu
 WorkingDirectory=/srv/jupyter
-Environment=SPARK_HOME=/usr/lib/spark
-Environment=SPARK_CONF_DIR=/usr/lib/spark/conf
+Environment=SPARK_HOME=/opt/spark
+Environment=SPARK_CONF_DIR=/opt/spark/conf
 Environment=APACHE_SPARK_VERSION=2.4.1
-Environment=PYTHONPATH=/usr/lib/spark/python:/opt/conda/bin/python:/usr/lib/spark/python/lib/py4j-0.10.7-src.zip
+Environment=PYTHONPATH=/opt/spark/python:/opt/conda/bin/python:/opt/spark/python/lib/py4j-0.10.7-src.zip
 Environment=HADOOP_VERSION=3.2.0
 Environment=SHELL=/bin/bash
 Environment=CONDA_DIR=/opt/conda
-Environment=PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin
 ExecStart=/bin/bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate jupyter_env && {{jupyter_bin}} notebook --no-browser --NotebookApp.ip='*' --NotebookApp.port=8888 --NotebookApp.token=''"
 [Install]
 WantedBy=multi-user.target
