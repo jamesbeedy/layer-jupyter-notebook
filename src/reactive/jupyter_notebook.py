@@ -30,6 +30,8 @@ from charms.layer.conda_api import (
     install_conda_pip_packages,
 )
 
+from charms.layer.spark_base import render_spark_env_sh
+
 
 KV = unitdata.kv()
 
@@ -55,6 +57,15 @@ def create_jupyter_work_dir():
 
 
 @when('spark.base.available')
+@when_not('spark.env.available')
+def write_spark_env():
+    render_spark_env_sh(template='spark-env.sh')
+    set_flag('spark.env.available')
+
+
+@when('spark.base.available',
+      'hadoop.base.available',
+      'spark.env.available')
 @when_not('jupyter.installed')
 def install_jupyter_notebook():
     hookenv.log("Install Jupyter-notebook")
