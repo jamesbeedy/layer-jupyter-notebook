@@ -1,5 +1,6 @@
 includes:
   - 'layer:basic'
+  - 'layer:status'
   - 'layer:conda-api'
   - 'layer:spark-base'
   - 'layer:hadoop-base'

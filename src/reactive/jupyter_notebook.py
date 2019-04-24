@@ -1,12 +1,6 @@
-import os
-import re
-from pathlib import Path
-from subprocess import check_call
-
 from charmhelpers.core import (
     hookenv,
     host,
-    templating,
     unitdata
 )
 
@@ -18,8 +12,9 @@ from charms.reactive import (
     when,
     when_not,
     set_flag,
-    clear_flag,
 )
+
+from charms.layer import status
 
 from charms.layer.conda_api import (
     CONDA_HOME,
@@ -30,14 +25,22 @@ from charms.layer.conda_api import (
     install_conda_pip_packages,
 )
 
-from charms.layer.spark_base import render_spark_env_sh
+from charms.layer.spark_base import (
+    render_spark_env_sh,
+    get_spark_version,
+)
+
+from charms.layer.hadoop_base import get_hadoop_version
+
+from charms.layer.jupyter_notebook import (
+    JUPYTER_WORK_DIR,
+    JUPYTER_CONDA_ENV_NAME,
+    JUPYTER_NOTEBOOK_PORT,
+    render_jupyter_systemd_template,
+)
 
 
 KV = unitdata.kv()
-
-JUPYTER_WORK_DIR = Path('/srv/jupyter')
-JUPYTER_CONDA_ENV_NAME = 'jupyter_env'
-JUPYTER_NOTEBOOK_PORT = 8888
 
 
 @when_not('jupyter.bind.address.available')
@@ -68,7 +71,7 @@ def write_spark_env():
       'spark.env.available')
 @when_not('jupyter.installed')
 def install_jupyter_notebook():
-    hookenv.log("Install Jupyter-notebook")
+    status.maint("Installing Jupyter-Notebook")
 
     conf = hookenv.config()
 
@@ -99,7 +102,7 @@ def install_jupyter_notebook():
             env_name=JUPYTER_CONDA_ENV_NAME,
             conda_packages=conf.get('conda-extra-pip-packages').split())
 
-    # Chown the perms to ubuntu
+    # Chown CONDA_HOME to ubuntu:ubuntu
     chownr(str(CONDA_HOME), 'ubuntu', 'ubuntu', chowntopdir=True)
 
     # Set installed flag
@@ -108,8 +111,13 @@ def install_jupyter_notebook():
 
 @when('jupyter.installed')
 @when_not('jupyter.systemd.available')
-def render_systemd():
-    render_jupyter_systemd_template()
+def render_jupyter_systemd():
+    render_jupyter_systemd_template(
+        {
+            'hadoop_version': get_hadoop_version(),
+            'spark_version': get_spark_version(),
+        }
+    )
     set_flag('jupyter.systemd.available')
 
 
@@ -117,26 +125,28 @@ def render_systemd():
       'jupyter.bind.address.available')
 @when_not('jupyter.init.available')
 def jupyter_init_available():
-    conf = hookenv.config()
     restart_notebook()
     if host.service_running('jupyter-notebook'):
         hookenv.open_port(JUPYTER_NOTEBOOK_PORT)
         set_flag('jupyter.init.available')
     else:
-        hookenv.status_set('blocked', "Jupyter could not start - Please DEBUG")
+        status.blocked("Jupyter could not start - Please DEBUG")
 
 
 @when('endpoint.http.available',
-      'jupyter.init.available',
-      'jupyter.bind.address.available')
+      'jupyter.init.available')
 def configure_http():
-    conf = hookenv.config()
     endpoint = endpoint_from_flag('endpoint.http.available')
     endpoint.configure(
         port=JUPYTER_NOTEBOOK_PORT,
         private_address=KV.get('bind_address'),
         hostname=KV.get('bind_address')
     )
+
+
+@when('jupyter.init.available')
+def persist_status():
+    jupyter_status()
 
 
 def restart_notebook():
@@ -151,51 +161,20 @@ def restart_notebook():
 
 def jupyter_status():
     if host.service_running('jupyter-notebook'):
-        hookenv.status_set(
-            'active',
+        status.active(
             'http://{}:{}'.format(
                 KV.get('bind_address'),
                 JUPYTER_NOTEBOOK_PORT
             )
         )
     else:
-        hookenv.status_set(
-            'blocked',
+        status.blocked(
             'Could not restart service due to wrong configuration!'
         )
-
-
-def render_jupyter_systemd_template(ctxt=None):
-    """Render Jupyter Systemd template
-    """
-
-    if not ctxt:
-        ctxt = {}
-
-    ctxt['jupyter_bin'] = \
-        str(CONDA_HOME / 'envs' / JUPYTER_CONDA_ENV_NAME / 'bin' / 'jupyter')
-
-    templating.render(
-        source='jupyter-notebook.service.j2',
-        target='/etc/systemd/system/jupyter-notebook.service',
-        context=ctxt,
-    )
-    check_call(['systemctl', 'daemon-reload'])
 
 
 @hook('stop')
 def clear_jupyter_venv():
     status.maint('Removing Conda Env: {}'.format(JUPYTER_CONDA_ENV_NAME))
+    host.service_stop('jupyter-notebook')
     remove_conda_venv(env_name=JUPYTER_CONDA_ENV_NAME)
-    status.active('Conda Env: {} removed'.format(JUPYTER_CONDA_ENV_NAME))
-
-
-# def generate_hash(password):
-#     from notebook.auth import passwd
-#     return passwd(password)
-
-
-# def generate_password():
-#     from xkcdpass import xkcd_password as xp
-#     mywords = xp.generate_wordlist()
-#     return xp.generate_xkcdpassword(mywords, numwords=4)
